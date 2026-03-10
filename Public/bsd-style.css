@@ -1,0 +1,141 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f5f0e8; min-height: 100vh; padding-bottom: 60px; font-family: 'Libre Baskerville', serif; }
+.drop-cap p::first-letter { float: left; font-family: 'Playfair Display', serif; font-size: 3.8em; line-height: 0.8; padding-right: 6px; padding-top: 4px; font-weight: 900; color: #111; }
+.toolbar { background: #1a1a1a; color: #f5f0e8; padding: 8px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; letter-spacing: 0.1em; }
+.toolbar-btns { display: flex; gap: 10px; align-items: center; }
+.save-btn { cursor: pointer; background: #1a1a1a; color: #f5f0e8; border: 1px solid #f5f0e8; padding: 8px 18px; font-family: 'Libre Baskerville', serif; font-size: 0.8rem; letter-spacing: 0.08em; transition: background 0.2s; }
+.save-btn:hover { background: #8b0000; border-color: #8b0000; }
+.edit-btn { cursor: pointer; background: transparent; border: 1px solid #555; color: #ccc; padding: 6px 14px; font-family: 'Libre Baskerville', serif; font-size: 0.75rem; letter-spacing: 0.06em; transition: all 0.2s; }
+.edit-btn:hover { border-color: #8b0000; color: #8b0000; }
+.archive-btn { cursor: pointer; background: transparent; border: 1px solid #888; color: #ccc; padding: 6px 14px; font-family: 'Libre Baskerville', serif; font-size: 0.75rem; letter-spacing: 0.06em; transition: all 0.2s; }
+.archive-btn:hover { border-color: #f5f0e8; color: #f5f0e8; }
+.save-msg { color: #90ee90; font-size: 0.75rem; }
+
+/* PAGE NAVIGATION */
+.page-nav { background: #2a2a2a; padding: 8px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav-arrow { background: none; border: 1px solid #666; color: #ccc; width: 28px; height: 28px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; }
+.nav-arrow:hover:not([disabled]) { border-color: #f5f0e8; color: #f5f0e8; }
+.nav-arrow[disabled] { opacity: 0.3; cursor: default; }
+.page-names { display: flex; align-items: center; gap: 6px; font-family: 'Libre Baskerville', serif; font-size: 0.72rem; }
+.page-name { color: #aaa; cursor: pointer; letter-spacing: 0.06em; transition: color 0.2s; }
+.page-name:hover { color: #f5f0e8; }
+.page-name.active { color: #f5f0e8; }
+.page-sep { color: #555; }
+
+/* PAPER */
+.paper { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+.masthead { text-align: center; border-bottom: 4px double #222; padding-bottom: 10px; margin-top: 24px; }
+.masthead h1 { font-family: 'UnifrakturMaguntia', cursive; font-size: clamp(2.5rem, 8vw, 4.5rem); letter-spacing: 0.02em; color: #111; line-height: 1.1; }
+.masthead-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding: 4px 0; border-top: 1px solid #888; border-bottom: 1px solid #888; font-size: 0.7rem; color: #444; letter-spacing: 0.05em; }
+.top-story { padding: 18px 0 14px; border-bottom: 2px solid #555; }
+.top-story-head { text-align: center; margin-bottom: 12px; }
+.top-story-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; letter-spacing: -0.01em; color: #111; line-height: 1.2; }
+.divider-line { width: 60px; height: 2px; background: #555; margin: 10px auto 4px; }
+.byline { font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 4px; }
+.body-text { font-size: 1rem; line-height: 1.75; color: #222; column-count: 2; column-gap: 28px; column-rule: 1px solid #bbb; margin-top: 12px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 16px; }
+.col { padding: 0 20px 20px; }
+.col:last-child { border-left: 1px solid #999; }
+.col h3 { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; color: #111; }
+.col-divider { width: 100%; height: 1px; background: #bbb; margin: 8px 0 10px; }
+.col p { font-size: 0.88rem; line-height: 1.7; color: #333; }
+.photo-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid #bbb; }
+.photo-item img { width: 100%; max-height: 220px; object-fit: cover; display: block; border: 1px solid #ccc; }
+.photo-caption { font-size: 0.72rem; font-style: italic; color: #666; margin-top: 4px; text-align: center; }
+.editor-note { border-top: 2px solid #555; border-bottom: 2px solid #555; margin-top: 20px; padding: 16px 0; display: flex; gap: 24px; align-items: flex-start; }
+.editor-note-label { font-family: 'Playfair Display', serif; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #555; white-space: nowrap; padding-top: 2px; }
+.editor-note-text { font-size: 0.88rem; line-height: 1.7; color: #333; font-style: italic; }
+.footer { border-top: 3px double #555; margin-top: 20px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 0.65rem; color: #888; letter-spacing: 0.06em; }
+
+/* EDIT FIELDS */
+.edit-field { width: 100%; font-family: inherit; font-size: inherit; border: 2px dashed #b00; background: rgba(255,240,240,0.5); padding: 4px 6px; border-radius: 3px; color: inherit; resize: vertical; }
+.edit-field:focus { outline: none; border-color: #900; }
+input.edit-field { resize: none; }
+.photo-upload-zone { border: 2px dashed #b00; background: rgba(255,240,240,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; min-height: 140px; transition: background 0.2s; width: 100%; }
+.photo-upload-zone:hover { background: rgba(255,220,220,0.6); }
+.photo-upload-zone .icon { font-size: 2rem; color: #ccc; }
+.photo-upload-label { font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 8px; }
+.remove-photo { position: absolute; top: 6px; right: 6px; background: #8b0000; color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.8rem; line-height: 24px; text-align: center; }
+.photo-wrap { position: relative; }
+
+/* PIN MODAL */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: #fff8f0; border: 1px solid #ccc; max-width: 340px; width: 90%; padding: 32px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+.modal h3 { font-size: 0.85rem; color: #555; margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+.modal p { font-size: 0.78rem; color: #888; margin-bottom: 20px; }
+.pin-input { width: 100%; padding: 10px; font-family: inherit; font-size: 1rem; border: 1px solid #ccc; border-radius: 3px; text-align: center; letter-spacing: 0.3em; margin-bottom: 12px; }
+.pin-error { color: #b00; font-size: 0.75rem; margin-bottom: 10px; display: none; }
+.modal-hint { font-size: 0.7rem; color: #aaa; margin-top: 14px; }
+.cancel-link { background: none; border: none; color: #aaa; cursor: pointer; font-size: 0.75rem; margin-top: 8px; font-family: inherit; display: block; margin: 8px auto 0; }
+.loading { display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 1.1rem; letter-spacing: 0.05em; color: #333; }
+
+/* GAMES EDITOR */
+.games-editor { padding: 20px 0; }
+.game-section { border: 1px solid #ccc; background: #fff8f0; padding: 20px; margin-bottom: 20px; border-radius: 4px; }
+.game-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 14px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+.game-editor-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.game-editor-row label { font-size: 0.78rem; color: #555; white-space: nowrap; min-width: 160px; letter-spacing: 0.04em; }
+.game-hint-text { font-size: 0.72rem; color: #888; font-style: italic; margin-top: 6px; }
+.trivia-opt-row { align-items: center; }
+.cw-editor-grid { display: grid; grid-template-columns: repeat(5, 44px); gap: 2px; margin: 12px 0; }
+.cw-editor-cell { width: 44px; height: 44px; border: 1px solid #888; background: #fff; position: relative; display: flex; align-items: center; justify-content: center; }
+.cw-editor-cell.cw-black { background: #222; border-color: #222; }
+.cw-cell-num { position: absolute; top: 2px; left: 3px; font-size: 0.5rem; font-family: 'Libre Baskerville', serif; color: #555; line-height: 1; pointer-events: none; }
+.cw-clues-editor { margin-top: 16px; }
+.cw-clues-editor strong { font-size: 0.8rem; color: #444; display: block; margin-bottom: 8px; }
+
+/* GAMES PLAYER */
+.games-player { padding: 20px 0; }
+.games-top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.game-card { border: 1px solid #ccc; background: #fff8f0; padding: 20px; border-radius: 4px; }
+.game-card-cw { border: 1px solid #ccc; background: #fff8f0; padding: 20px; border-radius: 4px; }
+
+/* WORDLE */
+.wordle-board { display: flex; flex-direction: column; gap: 4px; margin: 12px auto; width: fit-content; }
+.wordle-row { display: flex; gap: 4px; }
+.wordle-cell { width: 40px; height: 40px; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; color: #111; }
+.wordle-current { border-color: #888; }
+.wordle-empty { border-color: #ddd; }
+.wordle-correct { background: #538d4e; border-color: #538d4e; color: #fff; }
+.wordle-present { background: #b59f3b; border-color: #b59f3b; color: #fff; }
+.wordle-absent { background: #3a3a3c; border-color: #3a3a3c; color: #fff; }
+.wordle-msg { text-align: center; font-size: 0.85rem; margin: 8px 0; font-weight: 700; }
+.wordle-win { color: #538d4e; }
+.wordle-lose { color: #8b0000; }
+.wordle-keyboard { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; }
+.wordle-key-row { display: flex; gap: 4px; justify-content: center; }
+.wordle-key { min-width: 28px; height: 36px; padding: 0 4px; border: none; border-radius: 3px; background: #d3d6da; font-family: 'Libre Baskerville', serif; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: background 0.15s; color: #111; }
+.wordle-wide { min-width: 44px; font-size: 0.65rem; }
+.wk-correct { background: #538d4e; color: #fff; }
+.wk-present { background: #b59f3b; color: #fff; }
+.wk-absent { background: #3a3a3c; color: #fff; }
+
+/* TRIVIA */
+.trivia-question { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: #222; margin-bottom: 14px; line-height: 1.4; }
+.trivia-options { display: flex; flex-direction: column; gap: 8px; }
+.trivia-option { background: #fff; border: 1px solid #bbb; padding: 10px 14px; font-family: 'Libre Baskerville', serif; font-size: 0.82rem; text-align: left; cursor: pointer; border-radius: 3px; transition: all 0.2s; color: #333; }
+.trivia-option:hover { border-color: #888; background: #f5f0e8; }
+.trivia-correct { background: #e8f5e9; border-color: #538d4e; color: #1b5e20; cursor: default; }
+.trivia-wrong { background: #fce4ec; border-color: #8b0000; color: #8b0000; cursor: default; }
+.trivia-result { margin-top: 12px; font-size: 0.85rem; font-weight: 700; }
+.trivia-win { color: #538d4e; }
+.trivia-lose { color: #555; }
+
+/* CROSSWORD */
+.cw-game { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.cw-grid { display: grid; grid-template-columns: repeat(5, 46px); gap: 2px; flex-shrink: 0; }
+.cw-cell { width: 46px; height: 46px; border: 1px solid #888; background: #fff; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+.cw-cell.cw-black { background: #222; border-color: #222; cursor: default; }
+.cw-selected { background: #f5e642 !important; }
+.cw-highlighted { background: #a8d8f0 !important; }
+.cw-correct { background: #b7e4b7 !important; }
+.cw-wrong { background: #f4b8b8 !important; }
+.cw-letter { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: #111; text-transform: uppercase; }
+.cw-controls { display: flex; gap: 8px; margin: 10px 0; }
+.cw-btn { background: #1a1a1a; color: #f5f0e8; border: none; padding: 6px 16px; font-family: 'Libre Baskerville', serif; font-size: 0.75rem; cursor: pointer; letter-spacing: 0.06em; transition: background 0.2s; }
+.cw-btn:hover { background: #8b0000; }
+.cw-clues { display: flex; gap: 20px; flex: 1; min-width: 180px; }
+.cw-clue-col { flex: 1; }
+.cw-dir-label { font-family: 'Playfair Display', serif; font-size: 0.85rem; font-weight: 700; color: #333; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+.cw-clue { font-size: 0.78rem; color: #444; margin-bottom: 5px; line-height: 1.4; padding: 2px 4px; border-radius: 2px; }
+.cw-clue-active { background: #f5e642; color: #111; font-weight: 700; }
