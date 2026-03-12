@@ -33,7 +33,8 @@ const DEFAULT_PAPER = {
   }
 };
 
-let paper = null, draft = null, editMode = false, showPin = false, currentPage = 0;
+let paper = null, draft = null, editMode = false, showPin = false, showSaveModal = false, currentPage = 0;
+let stats = { views: 0, wordle: 0, trivia: 0, crossword: 0 };
 let wordleState = { guesses: [], current: "", over: false, won: false };
 let triviaState = { answered: false, selected: null };
 let cwState = { userGrid: {}, selected: null, direction: "across", checked: {} };
@@ -50,14 +51,11 @@ function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 function escNl(s) { return esc(s).replace(/\n/g,"<br>"); }
 
 // ===== LOCAL STORAGE =====
-function puzzleKey() {
-  // Key is based on the puzzle content so it resets when editor saves new puzzles
-  var g = paper && paper.games;
-  if (!g) return "bsd-games-default";
-  return "bsd-games-" + btoa(encodeURIComponent(
-    (g.wordle.word||"") + "|" + (g.trivia.question||"") + "|" + (g.crossword.grid||"")
-  )).slice(0, 32);
+function editionKey() {
+  return "bsd-edition-" + ((paper && paper.edition) || "default").replace(/[^a-zA-Z0-9]/g, "-");
 }
+function puzzleKey() { return editionKey() + "-games"; }
+function viewKey() { return editionKey() + "-viewed"; }
 
 function saveGameState() {
   try {
@@ -82,6 +80,43 @@ function loadGameState() {
   } catch(e) {}
 }
 
+async function trackView() {
+  try {
+    var vk = viewKey();
+    if (localStorage.getItem(vk)) return; // already counted this edition
+    localStorage.setItem(vk, "1");
+    await fetch("/api/stats/increment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ edition: (paper && paper.edition)||"default", field: "views" })
+    });
+  } catch(e) {}
+}
+
+async function loadStats() {
+  try {
+    var edition = (paper && paper.edition) || "default";
+    var res = await fetch("/api/stats?edition=" + encodeURIComponent(edition));
+    if (res.ok) stats = await res.json();
+  } catch(e) {}
+}
+
+async function recordPuzzleComplete(field) {
+  try {
+    var edition = (paper && paper.edition) || "default";
+    // Only record once per edition per player using localStorage
+    var ck = editionKey() + "-" + field;
+    if (localStorage.getItem(ck)) return;
+    localStorage.setItem(ck, "1");
+    var res = await fetch("/api/stats/increment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ edition: edition, field: field })
+    });
+    if (res.ok) { var data = await res.json(); stats = data; render(); }
+  } catch(e) {}
+}
+
 async function loadPaper() {
   try {
     var res = await fetch("/api/newspaper");
@@ -97,11 +132,22 @@ async function loadPaper() {
   if (!paper.games.crossword.downClues) paper.games.crossword.downClues = {};
   if (!paper.games.trivia.options) paper.games.trivia.options = ["","","",""];
   loadGameState();
+  trackView();
+  loadStats();
   render();
 }
 
-async function savePaper() {
-  var btn = document.getElementById("save-btn");
+function savePaper() {
+  // Show confirmation modal instead of saving immediately
+  showSaveModal = true;
+  render();
+}
+
+async function confirmSave() {
+  var newEdition = document.getElementById("save-edition-input").value.trim();
+  var doReset = document.getElementById("save-reset-check").checked;
+  if (newEdition) draft.edition = newEdition;
+  var btn = document.getElementById("confirm-save-btn");
   if (btn) btn.textContent = "Saving...";
   try {
     var res = await fetch("/api/newspaper", {
@@ -111,17 +157,30 @@ async function savePaper() {
     });
     if (!res.ok) throw new Error("Server error");
     paper = JSON.parse(JSON.stringify(draft));
-    editMode = false; draft = null;
-    wordleState = { guesses: [], current: "", over: false, won: false };
-    triviaState = { answered: false, selected: null };
-    cwState = { userGrid: {}, selected: null, direction: "across", checked: {} };
+    editMode = false; draft = null; showSaveModal = false;
+    if (doReset) {
+      wordleState = { guesses: [], current: "", over: false, won: false };
+      triviaState = { answered: false, selected: null };
+      cwState = { userGrid: {}, selected: null, direction: "across", checked: {} };
+      stats = { views: 0, wordle: 0, trivia: 0, crossword: 0 };
+      // Reset stats on server
+      try {
+        await fetch("/api/stats/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-secret": API_SECRET },
+          body: JSON.stringify({ edition: paper.edition })
+        });
+      } catch(e) {}
+    }
     showMsg("Edition saved! \u2713");
     render();
   } catch(e) {
     showMsg("Save failed. Try again.");
-    if (btn) btn.textContent = "Save Edition";
+    if (btn) btn.textContent = "Save";
   }
 }
+
+function cancelSave() { showSaveModal = false; render(); }
 
 function showMsg(msg) {
   var el = document.getElementById("save-msg");
@@ -287,12 +346,16 @@ function cwHandleKey(e) {
 function checkCrossword() {
   var parsed=parseCrossword(paper.games.crossword.grid);
   var result={};
+  var allCorrect=true;
   for(var i=0;i<25;i++){
     if(parsed.cells[i]===null) continue;
     var u=cwState.userGrid[i]||"";
     result[i]=u===parsed.cells[i]?"correct":(u?"wrong":"empty");
+    if(result[i]!=="correct") allCorrect=false;
   }
-  cwState.checked=result;render();
+  cwState.checked=result;
+  if(allCorrect) recordPuzzleComplete("crossword");
+  render();
 }
 
 function clearCrossword() {
@@ -315,7 +378,7 @@ function wordleSubmit() {
   if(wordleState.over||wordleState.current.length!==5) return;
   var word=(paper.games.wordle.word||"CODES").toUpperCase();
   wordleState.guesses.push(wordleState.current);
-  if(wordleState.current===word){wordleState.won=true;wordleState.over=true;}
+  if(wordleState.current===word){wordleState.won=true;wordleState.over=true;recordPuzzleComplete("wordle");}
   else if(wordleState.guesses.length>=6) wordleState.over=true;
   wordleState.current="";
   saveGameState();
@@ -341,6 +404,7 @@ function getWordleKeyStates(word,guesses) {
 function selectTrivia(index) {
   if(triviaState.answered) return;
   triviaState.selected=index;triviaState.answered=true;
+  if(index===(paper.games.trivia.answer)) recordPuzzleComplete("trivia");
   saveGameState();
   render();
 }
@@ -373,7 +437,8 @@ function archiveEdition() {
   html+="<div class=\"section-break\">\u2042 The Lighter Side \u2042</div>\n";
   if(ltop){html+="<div class=\"top-story\"><div class=\"top-story-head\"><h2>"+esc(ltop.headline)+"</h2><div class=\"divider-line\"></div><div class=\"byline\">By "+esc(ltop.byline)+"</div></div><div class=\"body-text drop-cap\"><p>"+escNl(ltop.body)+"</p></div></div>\n";}
   html+="<div class=\"two-col\">"+sb(lleft)+sb(lright)+"</div>\n";
-  html+="<div class=\"footer\"><span>"+esc(d.name)+" \u00B7 "+formatDate()+"</span><span>For internal use only</span></div>\n</div>\n</body>\n</html>";
+  var statsLine="\uD83D\uDC41 "+stats.views+" views \u00B7 \uD83D\uDD24 Wordle: "+stats.wordle+" \u00B7 \u2753 Trivia: "+stats.trivia+" \u00B7 \uD83D\uDDD6 Crossword: "+stats.crossword;
+  html+="<div class=\"footer\"><span>"+esc(d.name)+" \u00B7 "+formatDate()+"</span><span>"+statsLine+"</span></div>\n</div>\n</body>\n</html>";
 
   var blob=new Blob([html],{type:"text/html"});
   var a=document.createElement("a");
@@ -396,7 +461,7 @@ function renderPhoto(img) {
 // ===== RENDER =====
 function render() {
   var d=editMode?draft:paper;
-  var html=renderToolbar()+renderPin()+renderNav();
+  var html=renderToolbar()+renderPin()+renderSaveModal()+renderNav();
   if(!showPin){
     if(currentPage===0) html+=renderFrontPage(d);
     else if(currentPage===1) html+=renderLighterSide(d);
@@ -406,7 +471,11 @@ function render() {
 }
 
 function renderToolbar() {
+  var statsHtml = editMode
+    ? '<span class="toolbar-stats">\u2600 '+stats.views+' &nbsp;\uD83D\uDD24 '+stats.wordle+' &nbsp;\u2753 '+stats.trivia+' &nbsp;\uD83D\uDDD6 '+stats.crossword+'</span>'
+    : '';
   return '<div class="toolbar"><span>\u2600 '+formatDate()+'</span><div class="toolbar-btns">'
+    +statsHtml
     +'<span id="save-msg" class="save-msg"></span>'
     +(editMode
       ?'<button class="archive-btn" onclick="archiveEdition()">\u2193 Archive</button>'
@@ -414,6 +483,12 @@ function renderToolbar() {
         +'<button class="edit-btn" onclick="exitEdit()">Cancel</button>'
       :'<button class="edit-btn" onclick="enterEdit()">Editor Mode</button>')
     +'</div></div>';
+}
+
+function renderSaveModal() {
+  if (!showSaveModal) return "";
+  var edition = draft ? (draft.edition||"") : "";
+  return '<div class="modal-overlay"><div class="modal save-modal"><h3>Save Edition</h3><div class="save-modal-stats"><p class="save-modal-label">Current Statistics</p><div class="stats-grid"><div class="stat-item"><span class="stat-icon">\u2600</span><span class="stat-val">' + stats.views + '</span><span class="stat-label">Views</span></div><div class="stat-item"><span class="stat-icon">\uD83D\uDD24</span><span class="stat-val">' + stats.wordle + '</span><span class="stat-label">Wordle Solved</span></div><div class="stat-item"><span class="stat-icon">\u2753</span><span class="stat-val">' + stats.trivia + '</span><span class="stat-label">Trivia Correct</span></div><div class="stat-item"><span class="stat-icon">\uD83D\uDDD6</span><span class="stat-val">' + stats.crossword + '</span><span class="stat-label">Crossword Done</span></div></div></div><div class="save-modal-field"><label class="save-modal-label">Edition Number</label><input id="save-edition-input" class="edit-field" type="text" value="' + esc(edition) + '" style="margin-top:4px;" /></div><div class="save-modal-reset"><label class="save-reset-label"><input id="save-reset-check" type="checkbox" />New edition \u2014 reset stats &amp; player progress</label><p class="save-reset-hint">Check this when publishing a new edition. Leave unchecked for minor edits.</p></div><div class="save-modal-btns"><button id="confirm-save-btn" class="save-btn" onclick="confirmSave()">Save</button><button class="edit-btn" onclick="cancelSave()">Cancel</button></div></div></div>';
 }
 
 function renderPin() {
